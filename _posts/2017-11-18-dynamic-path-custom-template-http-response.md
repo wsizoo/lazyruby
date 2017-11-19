@@ -131,69 +131,101 @@ public function __construct() {
 
 ## How to serve up a custom page template and parse the URI
 Without spending too much time here, the main concept is that we will use `preg_match` to pull the ISBN from the URI. We will then make a call to the Open Library API, and pull all of the book's data in JSON format. We will also add a function to return a 404 if the API call returns an empty response (the ISBN number doesn't exist). Now you have the data in the page, and can leverage a JS templating engine like Mustache.js, or convert the JSON to a PHP array and assign them to variables and manually generate the page layout. In my experience, JS templating provides much fast page load times.
+1. Get ISBN from URI.
 ```php
 <?php
-/**
- * Main template for displaying book pages
- *
- * @package Your Theme Package
- */
-// Get ISBN
-    $uri = $_SERVER["REQUEST_URI"];
+	$uri = $_SERVER["REQUEST_URI"];
     preg_match('/\/book\/detail\/(\d{10})/', $uri, $isbn_10);
-// Output ISBN Match
-    global $page_isbn_10;
+```
+2. Output ISBN URI match.
+```php
+<?php
+	global $page_isbn_10;
     $page_isbn_10 = $isbn_10[1];
-// Get Data
-    $request = file_get_contents("http://openlibrary.org/api/books?bibkeys=ISBN:{$page_isbn_10}&format=json&jscmd=details&preview=full");
+```
+3. Get data from API.
+```php
+<?php
+	$request = file_get_contents("http://openlibrary.org/api/books?bibkeys=ISBN:{$page_isbn_10}&format=json&jscmd=details&preview=full");
     $json_request = json_decode($request);
-// Invalid ISBN return 404
-    if ($json_request == {}){
+```
+4. Return 404 if invalid ISBN.
+```php
+<?php
+	if ($json_request == {}){
       status_header( 404 );
       get_template_part( 404 ); exit();
     }
-// Custom Title and Description
-    add_filter( 'wp_title', __NAMESPACE__. '\ipg_custom_title', 10, 3 );
+```
+5. Add title and description from data.
+```php
+<?php
+	add_filter( 'wp_title', __NAMESPACE__. '\ipg_custom_title', 10, 3 );
     function ipg_custom_title($title){
         global $json_request;
         $title = $json_request[key($json_request)]->details->title;
         return $title;
     };
-
-// More default header stuff
-    get_header();
-    get_template_part( 'menu', 'index' ); //the  menu + logo/site title ?>
-
-<div class="sixteen columns alpha">
-    <div id="primary">
-        <div id="content">
-            <div class="main">
-                <header class="entry-header">
-                    <h1 class="entry-title"><?php ?></h1>
-                </header>
-
-                <?php the_post(); ?>
-                <article id="post-<?php the_ID(); ?>" <?php post_class(); ?>>
-                    <div class="entry-content">
-                        <!-- Begin Book -->
-                        <div id="book">
-                        <!-- USE TEMPLATING ENGINE TO RENDER DATA -->
-                        <!-- mustache.js is a great option -->
-                        <!-- https://github.com/janl/mustache.js -->
-                        </div>
-                        <!-- End Book -->
-                        <?php edit_post_link( __( 'Edit', 'appfolio' ), '<span class="edit-link">', '</span>' ); ?>
-                    </div><!-- .entry-content -->
-                </article><!-- #post-<?php the_ID(); ?> -->
-
-            </div><!-- #main -->
-        </div><!-- #content -->
-    </div><!-- #primary -->
-</div>
-
-<?php get_footer(); ?>
 ```
+6. Combine it. `/includes/templates/book.php`
+```php
+<?php
+		/**
+		 * Main template for displaying book pages
+		 *
+		 * @package Your Theme Package
+		 */
+		// Get ISBN
+		    $uri = $_SERVER["REQUEST_URI"];
+		    preg_match('/\/book\/detail\/(\d{10})/', $uri, $isbn_10);
+		// Output ISBN Match
+		    global $page_isbn_10;
+		    $page_isbn_10 = $isbn_10[1];
+		// Get Data
+		    $request = file_get_contents("http://openlibrary.org/api/books?bibkeys=ISBN:{$page_isbn_10}&format=json&jscmd=details&preview=full");
+		    $json_request = json_decode($request);
+		// Invalid ISBN return 404
+		    if ($json_request == {}){
+		      status_header( 404 );
+		      get_template_part( 404 ); exit();
+		    }
+		// Custom Title and Description
+		    add_filter( 'wp_title', __NAMESPACE__. '\ipg_custom_title', 10, 3 );
+		    function ipg_custom_title($title){
+		        global $json_request;
+		        $title = $json_request[key($json_request)]->details->title;
+		        return $title;
+		    };
+		// More default header stuff
+		    get_header();
+		    get_template_part( 'menu', 'index' ); //the  menu + logo/site title ?>
 
+	<div class="sixteen columns alpha">
+	    <div id="primary">
+	        <div id="content">
+	            <div class="main">
+	                <header class="entry-header">
+	                    <h1 class="entry-title"><?php ?></h1>
+	                </header>
+	                <?php the_post(); ?>
+	                <article id="post-<?php the_ID(); ?>" <?php post_class(); ?>>
+	                    <div class="entry-content">
+	                        <!-- Begin Book -->
+	                        <div id="book">
+	                        <!-- USE TEMPLATING ENGINE TO RENDER DATA -->
+	                        <!-- mustache.js is a great option -->
+	                        <!-- https://github.com/janl/mustache.js -->
+	                        </div>
+	                        <!-- End Book -->
+	                        <?php edit_post_link( __( 'Edit', 'appfolio' ), '<span class="edit-link">', '</span>' ); ?>
+	                    </div><!-- .entry-content -->
+	                </article><!-- #post-<?php the_ID(); ?> -->
+
+	            </div><!-- #main -->
+	        </div><!-- #content -->
+	    </div><!-- #primary -->
+	</div>
+```
 
 ## How to package it up
 - /isbn-page-generator
