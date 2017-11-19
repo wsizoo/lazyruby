@@ -1,0 +1,21 @@
+---
+layout: default
+---
+
+<div class="posts">
+  {% for post in site.categories.ruby %}
+    <article class="post">
+
+      <h1><a href="{{ site.baseurl }}{{ post.url }}">{{ post.title }}</a></h1>
+      <h4 class="tags">{{post.tags | join: ', '}}</h4>
+      <h5 class="post-date">{{ post.date | date: "%B %e, %Y" }}</h5>
+
+      <div class="entry">
+        {{ post.content }}
+      </div>
+      <!-- <a href="{{ site.baseurl }}{{ post.url }}" class="read-more">Read More</a> -->
+    </article>
+
+    <hr/>
+  {% endfor %}
+</div>
