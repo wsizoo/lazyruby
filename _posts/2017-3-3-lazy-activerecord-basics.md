@@ -12,7 +12,7 @@ Let's start off with simple a call to a Domain model.
 
 ```ruby
 domain = Domains.find(1)
-#=> <#ActiveRecord:: Id='1',Name='testdomain.com',Registrar='HopefullyNotGoDaddy',NameServers='ns1.domain.com', ResourceRecords=[]>
+#=> <#ActiveRecord:: Id='1', Name='testdomain.com', Registrar='HopefullyNotGoDaddy', NameServers='ns1.domain.com', ResourceRecords=[]>
 ```
 
 This is a seemingly benign ActiveRecord request, but let's take a look under the hood. This can be represented in SQL as
